@@ -4,13 +4,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRoles } from './enums/user.enum';
-
+import { Application } from '../application/entities/appli.entity';
+ 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
   @ApiProperty({ description: 'Primary key as User ID', example: 1 })
@@ -55,4 +57,8 @@ export class User extends BaseEntity {
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(password || this.password, salt);
   }
+
+
+  @OneToMany(() => Application, (application) => application.user)
+  applications: Application[]; 
 }

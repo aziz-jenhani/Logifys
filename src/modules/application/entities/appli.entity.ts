@@ -7,6 +7,8 @@ import {
     UpdateDateColumn,
     PrimaryGeneratedColumn,
     OneToMany,
+    ManyToOne,
+    JoinColumn,
 } from 'typeorm';
 import { User } from '../../user/user.entity'; // Import the User entity if not already imported
 import { Log } from 'src/modules/loges/entities/log.entity';
@@ -49,8 +51,15 @@ export class Application extends BaseEntity {
     @ApiProperty({ description: 'When app was updated' })
     @UpdateDateColumn()
     updated_at: Date;
+    @Column({ type: 'int', nullable: true }) // Add the user_id column
+    user_id: number;
+  
+    @ManyToOne(() => User, (user) => user.applications)
+    @JoinColumn({ name: 'user_id' })
+    user: User;
 
-@OneToMany(() => Log, (log) => log.application)
+
+@OneToMany(() => Log, (log) => log.application, { cascade: true })
 logs: Log[];
 }
 
