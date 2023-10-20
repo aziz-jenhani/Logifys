@@ -45,7 +45,7 @@ export class LogController {
   async getLogById(@Param('id') logId: number, @Query('secretKey') secretKey: string) {
     const log = await this.logService.getLogById(logId, secretKey);
     return log;
-  }
+  } 
   @Delete(':id')
   async deleteLogById(@Param('id') logId: number, @Query('secretKey') secretKey: string) {
     await this.logService.deleteLogById(logId, secretKey);
