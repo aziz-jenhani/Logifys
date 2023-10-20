@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -29,33 +29,44 @@ export class AppliService {
   }
   
   
-
-   async paginate(options: IPaginationOptions, userId: number): Promise<Pagination<Application>> {
+  async paginate(options: IPaginationOptions, userId: number): Promise<Pagination<Application>> {
     const qb = this.appRepository.createQueryBuilder('q');
     qb.orderBy('q.id', 'DESC');
-    qb.leftJoinAndSelect('q.logs', 'qt');
-    qb.leftJoinAndSelect('q.user', 'u');
 
-    // Add a WHERE condition to filter by user ID
-    qb.where('u.id = :userId', { userId });
+    // Ajoutez une condition WHERE pour filtrer par ID d'utilisateur
+    qb.where('q.userId = :userId', { userId });
 
     return paginate<Application>(qb, options);
   }
 
-  async getAppById(id: number,userId: number): Promise<Application> {
-console.log(userId)
-    const app= await this.appRepository.findOne(id, {
-      relations: ['logs'],
-      where: {
-        user: { id: userId }, // Filter by user ID
-      }, // Update relations to include 'user'
-    });
-    if(!app)
-    {
-      throw new NotFoundException(`Users have no Application with id ${id}`);
+
+  async getAppById(id: number, userId: number): Promise<Application> {
+    try {
+      const application = await this.appRepository.findOne({
+        where: {
+          id: id,
+          userId: userId, // Vérifie que l'application appartient à l'utilisateur actuellement authentifié.
+        },
+      });
+
+      if (!application) {
+        throw new NotFoundException(`L'application avec l'ID ${id} n'a pas été trouvée.`);
+      }
+
+      return application;
+    } catch (error) {
+      throw new HttpException(
+        `Erreur lors de la récupération de l'application : ${error.message}`,
+        HttpStatus.NOT_FOUND, // Utilisez le code HTTP 404 pour "Not Found"
+      );
     }
-    return app;
   }
+
+
+
+
+
+
 
   async getAppByName(application_name: string): Promise<Application> {
     return await this.appRepository.findOne({
@@ -65,7 +76,7 @@ console.log(userId)
   }
   
   async getAppBySecretKey(secretKey: string): Promise<Application> {
-    const app = await this.appRepository.findOne({ secret_key: secretKey });
+    const app = await this.appRepository.findOne({ secretKey: secretKey });
 
     if (!app) {
       throw new NotFoundException('Application not found');
@@ -78,8 +89,8 @@ console.log(userId)
     const secretKey = this.generateSecretKey();
     const newApp = this.appRepository.create({
       ...app,
-      secret_key: secretKey,
-      user_id: userId, // Associate the user with the new application
+      secretKey: secretKey,
+      userId: userId, // Associate the user with the new application
     });
     return await this.appRepository.save(newApp);
   }

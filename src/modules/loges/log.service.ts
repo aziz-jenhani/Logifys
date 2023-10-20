@@ -13,67 +13,84 @@ export class LogService {
     @InjectRepository(LogRepository)
     private logRepository: LogRepository,
   ) { }
+              
 
-  async findLogById(id: number): Promise<Log> {
 
-    const log = await this.logRepository.findOne(id, {
-      relations: ['application'],
-    });
-    if (!log) {
-      throw new NotFoundException(`Log with id ${id} not found`);
+  async getLogsForApplication(secretKey: string): Promise<Log[]> {
+  const application = await this.appliService.getAppBySecretKey(secretKey);
+    if (!application) {
+      throw new NotFoundException('Application not found');
     }
-    return log;
-  }
-  ;
-  async getAllLogs(userId: number): Promise<Log[]> {
-    const apps = await this.appliService.getAllAppli(userId);
 
-    const appIds = apps.map(app => app.id);
-
-    const logs = await this.logRepository.find({
-      where: {
-        application: {
-          id: In(appIds),
-        },
-      },
-    });
-
-    if (!logs)
-      throw new NotFoundException("you have not yet Logs")
-    return logs;
+    return this.logRepository.find({ where: {application:application } });
   }
 
-  async getLogById(id: number,userId: number): Promise<Log> {
-
-    const log = await this.logRepository.findOne(id, {
-      relations: ['application'],
-      where: {
-        application: {
-          user_id:userId,
-        },
-      },
-    });
-    if (!log) {
-      throw new NotFoundException(`Log with id ${id} not found`);
+  async createLogForApplication(secretKey: string, createLogDto: LogDto) {
+    const application = await this.appliService.getAppBySecretKey(secretKey);
+    if (!application) {
+      throw new NotFoundException('Application not found');
     }
-    return log;
-  }
 
-  async createLog(log: LogDto, app: Application): Promise<Log> {
-    // Assurez-vous que la valeur de secret_key est définie dans l'objet Log
     const newLog = new Log();
-    newLog.information_log = log.information_log;
-    newLog.application_name = app.name;
+    newLog.description = createLogDto.description;
+    
 
-    // Enregistrez le journal
-    const savedLog = await this.logRepository.save({ ...newLog, application: app });
+    newLog.application = application;
 
-    // Assurez-vous d'ajouter le journal à l'application
-    app.logs = [...app.logs, savedLog];
-    await app.save();
-
-    return savedLog;
+    const savedLog = await this.logRepository.save(newLog);
+    const createdLogData = {
+      id: savedLog.id,
+      description: savedLog.description,
+      createdAt: savedLog.createdAt,
+      updatedAt: savedLog.updatedAt,
+    };
+    return createdLogData;
   }
+  async getLogById(logId: number, secretKey: string) {
+    const application = await this.appliService.getAppBySecretKey(secretKey);
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+
+    const log = await this.logRepository.findOne(logId, {
+      relations: ['application'],
+      where: {
+        application,
+      },
+    });
+
+    if (!log) {
+      throw new NotFoundException(`Log with id ${logId} not found`);
+    }
+    const logData = {
+      id: log.id,
+      description: log.description,
+      createdAt: log.createdAt,
+      updatedAt: log.updatedAt,
+    };
+    return logData;
+  }
+
+
+  async deleteLogById(logId: number, secretKey: string): Promise<void> {
+    const application = await this.appliService.getAppBySecretKey(secretKey);
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+
+    const log = await this.logRepository.findOne(logId, {
+      where: {
+        application,
+      },
+    });
+
+    if (!log) {
+      throw new NotFoundException(`Log with id ${logId} not found`);
+    }
+
+    await this.logRepository.remove(log);
+  }
+
 
 
 

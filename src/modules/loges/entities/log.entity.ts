@@ -1,5 +1,4 @@
 // log.entity.ts
-
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -21,27 +20,21 @@ export class Log extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 255 })
-  application_name: string;
-
- /* @ApiProperty({
-    description: 'Key of App',
-  })
-  @Column({ type: 'varchar', length: 255 })
-  secret_key: string;*/
-  
   @ApiProperty({
-    description: 'Information log',
+    description: 'Description of the log',
   })
-  @Column({ name: 'information_log', type: 'text' })
-  information_log: string;
+  @Column({ type: 'text' })
+  description: string;
+
+  @ApiProperty({ description: 'When log was created' })
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
 
   @ApiProperty({ description: 'When log was updated' })
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
+  updatedAt: Date;
 
-
-  @ManyToOne(() => Application, (application) => application.logs,{ onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'app_id' })
+  @ManyToOne(() => Application, (application) => application.logs, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'applicationId' })
   application: Application;
 }

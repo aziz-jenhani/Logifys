@@ -13,7 +13,7 @@ import {
 import { User } from '../../user/user.entity'; // Import the User entity if not already imported
 import { Log } from 'src/modules/loges/entities/log.entity';
 
-@Entity('application')
+@Entity('applications')
 export class Application extends BaseEntity {
     @ApiProperty({ description: 'Primary key as application ID', example: 1 })
     @PrimaryGeneratedColumn({
@@ -42,20 +42,20 @@ export class Application extends BaseEntity {
     @ApiProperty({
         description: 'Key of App',})
     @Column({ type: 'varchar', length: 255 })
-    secret_key: string;
+    secretKey: string;
 
     @ApiProperty({ description: 'When app was created' })
     @CreateDateColumn()
-    created_at: Date;
+    createdAt: Date;
 
     @ApiProperty({ description: 'When app was updated' })
     @UpdateDateColumn()
-    updated_at: Date;
+    updatedAt: Date;
     @Column({ type: 'int', nullable: true }) // Add the user_id column
-    user_id: number;
+    userId: number;
   
     @ManyToOne(() => User, (user) => user.applications)
-    @JoinColumn({ name: 'user_id' })
+    @JoinColumn({ name: 'userId' })
     user: User;
 
 

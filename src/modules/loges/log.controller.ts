@@ -1,11 +1,14 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   Param,
   Post,
+  Query,
   Request,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -17,6 +20,7 @@ import { LogRepository } from '../application/repositories/logs.repository';
 import { Application } from '../application/entities/appli.entity';
 import { LogService } from './log.service';
 import { AppliService } from '../application/services/appli.service';
+import { LogGuard } from './guards/log.guard';
 @ApiTags('Logs')
 @ApiBearerAuth()
 @Controller('log')
@@ -25,27 +29,27 @@ export class LogController {
     private logService: LogService,
     private appliService: AppliService,
   ) { }
-
-
   
-
-  
-  
-  @Post('')
-  @UsePipes(ValidationPipe)
-  @ApiCreatedResponse({
-    description: 'Log added to Application',
-    type: Log,
-  })
-  // LogController
-  // LogController
-  async saveLog(@Body() log: LogDto): Promise<Log> {
-    const app = await this.appliService.getAppByName(log.application_name);
-    if(!app){
-             throw new NotFoundException(`Application with name ${log.application_name} not found`);
-
+  @Get('application/:secretKey')
+  @UseGuards(LogGuard)
+    async getLogsForApplication(@Param('secretKey') secretKey: string) {
+      return this.logService.getLogsForApplication(secretKey);
     }
-    return await this.logService.createLog(log, app);
+
+  @Post('/:secretKey')
+  @UseGuards(LogGuard)
+  async createLogForApplication(@Param('secretKey') secretKey: string, @Body() createLogDto: LogDto, @Request() req) {
+    return this.logService.createLogForApplication(secretKey, createLogDto);
+  }
+  @Get(':id')
+  async getLogById(@Param('id') logId: number, @Query('secretKey') secretKey: string) {
+    const log = await this.logService.getLogById(logId, secretKey);
+    return log;
+  }
+  @Delete(':id')
+  async deleteLogById(@Param('id') logId: number, @Query('secretKey') secretKey: string) {
+    await this.logService.deleteLogById(logId, secretKey);
+    return { message: 'Log deleted successfully' };
   }
 
 }

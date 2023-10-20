@@ -20,26 +20,27 @@ export class BaseMigrations1649938237326 implements MigrationInterface {
 
     // Create the "application" table
     await queryRunner.query(`
-    CREATE TABLE application (
-      id SERIAL PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      description TEXT,
-      secret_key VARCHAR(255) NOT NULL,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT unique_name UNIQUE (name),
-      CONSTRAINT unique_secret_key UNIQUE (secret_key)
-    )
+     CREATE TABLE "applications" (
+        "id" serial PRIMARY KEY,
+        "name" varchar(255) NOT NULL,
+        "description" text NOT NULL,
+        "secretKey" varchar(255) NOT NULL,
+        "userId" integer,
+        "createdAt" timestamp NOT NULL DEFAULT current_timestamp,
+        "updatedAt" timestamp NOT NULL DEFAULT current_timestamp,
+        CONSTRAINT "FK_user_application" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE
+      )
   `);
-
+ 
     // Create the "logs" table
     await queryRunner.query(`
-      CREATE TABLE logs (
-        id SERIAL PRIMARY KEY,
-        app_id SERIAL REFERENCES application(id),
-        information_log TEXT NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        
+       CREATE TABLE "logs" (
+        "id" serial PRIMARY KEY,
+        "description" text NOT NULL,
+        "applicationId" integer,
+        "createdAt" timestamp NOT NULL DEFAULT now(),
+        "updatedAt" timestamp NOT NULL DEFAULT now(),
+        CONSTRAINT "FK_application_log" FOREIGN KEY ("applicationId") REFERENCES "applications"("id") ON DELETE CASCADE
       )
     `);
     
@@ -50,7 +51,7 @@ export class BaseMigrations1649938237326 implements MigrationInterface {
     await queryRunner.query('DROP TABLE logs');
 
     // Drop the "application" table
-    await queryRunner.query('DROP TABLE application');
+    await queryRunner.query('DROP TABLE applications');
 
     // Drop the "users" table
     await queryRunner.query('DROP TABLE "users"');

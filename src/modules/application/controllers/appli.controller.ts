@@ -47,12 +47,6 @@ export class ApplController {
 
 
 
-  @Get('/log/:id')
-  async getLogById(@Param('id', ParseIntPipe) id: number, @Request() req): Promise<Log> {
-    return await this.logService.getLogById(id, req.user.id);
-  }
-
-  // The rest of your routes
 
   @Get('/')
   @ApiPaginatedResponse({ model: Application, description: 'List of application' })
@@ -73,11 +67,6 @@ export class ApplController {
   @UsePipes(ValidationPipe)
   async createQuiz(@Body() appData: CreateAppliDto, @Request() req): Promise<Application> {
     return await this.applService.createNewApp(appData, req.user.id);
-  }
-
-  @Get('/log')
-  async getAllLogs(@Request() req): Promise<Log[]> {
-    return await this.logService.getAllLogs(Number(req.user.id));
   }
 
   @Get('/:id')
